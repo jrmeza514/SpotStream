@@ -112,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
             }
         }
     }
+    //j
     private void openLogin(){
         setContentView(R.layout.activity_main);
 
