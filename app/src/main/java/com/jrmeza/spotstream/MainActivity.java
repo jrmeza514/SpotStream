@@ -25,6 +25,8 @@ import com.spotify.sdk.android.player.PlayerState;
 import com.spotify.sdk.android.player.PlayerStateCallback;
 import com.spotify.sdk.android.player.Spotify;
 
+import org.json.JSONObject;
+
 public class MainActivity extends AppCompatActivity implements PlayerNotificationCallback, ConnectionStateCallback{
     private static final  int LOGIN_REQUEST_CODE = 1337;
     private static final String REDIRECT_URI = "jrmeza://callback";
@@ -161,5 +163,9 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
     @Override
     public void onPlaybackError(ErrorType errorType, String s) {
         Toast.makeText(this, s, Toast.LENGTH_LONG);
+    }
+
+    public void getSearch(){
+
     }
 }

@@ -9,8 +9,9 @@ import org.json.JSONObject;
  * Created by jrmeza on 6/7/15.
  */
 public class SearchManager {
-    public SearchManager(){}
+    public SearchManager(){
 
+    }
     public static class RequestBuilder{
         private String type = "";
         private String market = "US";
