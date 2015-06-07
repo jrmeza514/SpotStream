@@ -58,6 +58,9 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
                 }
             }
         });
+
+        String url = (new SearchManager.RequestBuilder("Thinking Out Loud")).build();
+        Toast.makeText(this, url,Toast.LENGTH_LONG).show();
     }
 
     @Override
