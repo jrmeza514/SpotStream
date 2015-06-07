@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
 
     @Override
     public void onLoggedOut() {
-        Toast.makeText(this, "Logged Out kk", Toast.LENGTH_LONG);
+        Toast.makeText(this, "Logged Out kk ", Toast.LENGTH_LONG);
     }
 
     @Override
