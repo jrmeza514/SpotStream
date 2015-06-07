@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SpotStream.iml" filepath="$PROJECT_DIR$/SpotStream.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SpotStreamVCS.iml" filepath="$PROJECT_DIR$/SpotStreamVCS.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/spotify-auth-1.0.0-beta10/spotify-auth-1.0.0-beta10.iml" filepath="$PROJECT_DIR$/spotify-auth-1.0.0-beta10/spotify-auth-1.0.0-beta10.iml" />
       <module fileurl="file://$PROJECT_DIR$/spotify-player-1.0.0-beta10/spotify-player-1.0.0-beta10.iml" filepath="$PROJECT_DIR$/spotify-player-1.0.0-beta10/spotify-player-1.0.0-beta10.iml" />
