@@ -140,6 +140,9 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        }else if( id == R.id.logout_button){
+            AuthenticationClient.logout(getApplication());
+            openLogin();
         }
 
         return super.onOptionsItemSelected(item);
@@ -190,17 +193,17 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
 
     @Override
     public void onLoggedIn() {
-        Toast.makeText(this, "Logged In", Toast.LENGTH_LONG);
+        Toast.makeText(this, "Logged In", Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void onLoggedOut() {
-        Toast.makeText(this, "Logged Out", Toast.LENGTH_LONG);
+        Toast.makeText(this, "Logged Out", Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void onLoginFailed(Throwable throwable) {
-        Toast.makeText(this, "Failed To Log In!", Toast.LENGTH_LONG);
+        Toast.makeText(this, "Failed To Log In!", Toast.LENGTH_LONG).show();
     }
 
     @Override
