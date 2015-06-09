@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +16,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -49,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
     private static final String REDIRECT_URI = "jrmeza://callback";
     private static final String CLIENT_ID = "356673a85fa140daadc9bef2efa38b5f";
     private static final String DEBUG_TAG = "HTTPEXAMPLE";
-
+    private PalyerStatusTask playerSatusTask;
     private ToggleButton mToglgeButton;
     private Player mPlayer;
     private CompoundButton.OnCheckedChangeListener changeListener = new CompoundButton.OnCheckedChangeListener() {
@@ -64,7 +66,12 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
                             mPlayer.resume();
                         }else{
                             mPlayer.play("spotify:track:0zmfJIx6wH7zpFdIR8T8U9");
+                            track_duration_ms = 0;
+
                         }
+                        playerSatusTask.cancel( true );
+                        playerSatusTask = new PalyerStatusTask();
+                        playerSatusTask.execute();
                     }
                 });
             }else{
@@ -80,7 +87,10 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
             NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
             if (networkInfo != null && networkInfo.isConnected()) {
                 // fetch data
+                playerSatusTask.cancel( true );
                 new DownloadWebpageTask().execute(new SearchManager.RequestBuilder(searchTextField.getText().toString()).setType("track").build());
+                playerSatusTask = new PalyerStatusTask();
+                playerSatusTask.execute();
             } else {
                 // display error
             }
@@ -89,6 +99,10 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
     private Button searchButton;
     private EditText searchTextField;
     private TextView resultsTextView;
+    private int track_duration_ms;
+    private ProgressBar mProgressBar;
+    private int mProgressStatus = 0;
+    private Handler mHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,10 +114,13 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
         searchButton.setOnClickListener( searchListener );
         searchTextField = (EditText) findViewById(R.id.editText);
         resultsTextView = (TextView) findViewById(R.id.textView);
-
+        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
+        mProgressBar.setMax(1000);
+        playerSatusTask = new PalyerStatusTask();
 
         String url = (new SearchManager.RequestBuilder("Thinking Out Loud")).build();
         Toast.makeText(this, url,Toast.LENGTH_LONG).show();
+
     }
 
     @Override
@@ -141,12 +158,12 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
                 mPlayer = Spotify.getPlayer(playerConfig, this, new Player.InitializationObserver() {
 
                     @Override
-                    public void onInitialized(Player player) {
+                    public void onInitialized(final Player player) {
                         mPlayer.addConnectionStateCallback(MainActivity.this);
 
                         mPlayer.addPlayerNotificationCallback(MainActivity.this);
-
-
+                        //
+                        // new PalyerStatusTask().execute();
                     }
 
                     @Override
@@ -229,15 +246,22 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
                 JSONArray jsonItems = jsonTracks.getJSONArray("items");
                 JSONObject item0 = jsonItems.getJSONObject(0);
                 String uri = item0.getString("uri");
+                track_duration_ms = item0.getInt("duration_ms");
+
+
+
 
                 resultsTextView.setText(uri);
                 mPlayer.play(uri);
+                cancel( true );
+
             } catch (JSONException e) {
                 Log.d("JSONException" ,e.getMessage());
             }
 
 
         }
+
     }
     private String downloadUrl(String myurl) throws IOException {
         InputStream is = null;
@@ -274,6 +298,59 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
             if (is != null) {
                 is.close();
             }
+        }
+    }
+    void updateStatusBar(){
+        mPlayer.getPlayerState(new PlayerStateCallback() {
+            @Override
+            public void onPlayerState(PlayerState playerState) {
+                if(!playerState.trackUri.equals("")){
+                    mProgressStatus = (playerState.positionInMs * 1000 ) / playerState.durationInMs;
+                }
+            }
+        });
+    }
+    private class PalyerStatusTask extends AsyncTask<Integer, Integer, String> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            mProgressBar.setProgress(values[0]);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+        }
+
+        @Override
+        protected void onCancelled(String s) {
+            super.onCancelled(s);
+        }
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+        }
+
+        @Override
+        protected String doInBackground(Integer... params) {
+            while( mProgressStatus  < 100 && !isCancelled()){
+
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                updateStatusBar();
+                Log.d("STATUS_BAR_JRM" , mProgressStatus + "");
+                publishProgress(mProgressStatus);
+            }
+            return null;
         }
     }
 
