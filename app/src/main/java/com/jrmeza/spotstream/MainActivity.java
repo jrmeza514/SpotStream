@@ -3,13 +3,19 @@ package com.jrmeza.spotstream;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -25,41 +31,76 @@ import com.spotify.sdk.android.player.PlayerState;
 import com.spotify.sdk.android.player.PlayerStateCallback;
 import com.spotify.sdk.android.player.Spotify;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class MainActivity extends AppCompatActivity implements PlayerNotificationCallback, ConnectionStateCallback{
     private static final  int LOGIN_REQUEST_CODE = 1337;
     private static final String REDIRECT_URI = "jrmeza://callback";
     private static final String CLIENT_ID = "356673a85fa140daadc9bef2efa38b5f";
+    private static final String DEBUG_TAG = "HTTPEXAMPLE";
 
     private ToggleButton mToglgeButton;
     private Player mPlayer;
+    private CompoundButton.OnCheckedChangeListener changeListener = new CompoundButton.OnCheckedChangeListener() {
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            if(isChecked){
+                mPlayer.getPlayerState(new PlayerStateCallback() {
+                    @Override
+                    public void onPlayerState(PlayerState playerState) {
+                        //Toast.makeText(getApplicationContext(), playerState.trackUri, Toast.LENGTH_LONG).show();
+                        if (!playerState.trackUri.equals("") ){
+                            mPlayer.resume();
+                        }else{
+                            mPlayer.play("spotify:track:0zmfJIx6wH7zpFdIR8T8U9");
+                        }
+                    }
+                });
+            }else{
+                mPlayer.pause();
+            }
+        }
+    };
+    private Button.OnClickListener searchListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            ConnectivityManager connMgr = (ConnectivityManager)
+                    getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.isConnected()) {
+                // fetch data
+                new DownloadWebpageTask().execute(new SearchManager.RequestBuilder(searchTextField.getText().toString()).setType("track").build());
+            } else {
+                // display error
+            }
+        }
+    };
+    private Button searchButton;
+    private EditText searchTextField;
+    private TextView resultsTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         openLogin();
         mToglgeButton = (ToggleButton) findViewById(R.id.tb1);
-        mToglgeButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked){
-                    mPlayer.getPlayerState(new PlayerStateCallback() {
-                        @Override
-                        public void onPlayerState(PlayerState playerState) {
-                            //Toast.makeText(getApplicationContext(), playerState.trackUri, Toast.LENGTH_LONG).show();
-                            if (!playerState.trackUri.equals("") ){
-                                mPlayer.resume();
-                            }else{
-                                mPlayer.play("spotify:track:0zmfJIx6wH7zpFdIR8T8U9");
-                            }
-                        }
-                    });
-                }else{
-                    mPlayer.pause();
-                }
-            }
-        });
+        mToglgeButton.setOnCheckedChangeListener( changeListener );
+        searchButton = (Button) findViewById(R.id.button);
+        searchButton.setOnClickListener( searchListener );
+        searchTextField = (EditText) findViewById(R.id.editText);
+        resultsTextView = (TextView) findViewById(R.id.textView);
+
 
         String url = (new SearchManager.RequestBuilder("Thinking Out Loud")).build();
         Toast.makeText(this, url,Toast.LENGTH_LONG).show();
@@ -168,4 +209,72 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
     public void getSearch(){
 
     }
+    private class DownloadWebpageTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... urls) {
+
+            // params comes from the execute() call: params[0] is the url.
+            try {
+                return downloadUrl(urls[0]);
+            } catch (IOException e) {
+                return e.getMessage();
+            }
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(String result) {
+            try {
+                JSONObject jsonResults = new JSONObject( result );
+                JSONObject jsonTracks = jsonResults.getJSONObject("tracks");
+                JSONArray jsonItems = jsonTracks.getJSONArray("items");
+                JSONObject item0 = jsonItems.getJSONObject(0);
+                String uri = item0.getString("uri");
+
+                resultsTextView.setText(uri);
+                mPlayer.play(uri);
+            } catch (JSONException e) {
+                Log.d("JSONException" ,e.getMessage());
+            }
+
+
+        }
+    }
+    private String downloadUrl(String myurl) throws IOException {
+        InputStream is = null;
+        // Only display the first 500 characters of the retrieved
+        // web page content.
+
+
+        try {
+            URL url = new URL(myurl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setReadTimeout(10000 /* milliseconds */);
+            conn.setConnectTimeout(15000 /* milliseconds */);
+            conn.setRequestMethod("GET");
+            conn.setDoInput(true);
+            // Starts the query
+            conn.connect();
+            int response = conn.getResponseCode();
+            Log.d(DEBUG_TAG, "The response is: " + response);
+            is = conn.getInputStream();
+
+            // Convert the InputStream into a string
+            String contentAsString = "";
+            InputStreamReader reader = new InputStreamReader(is);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            String line = "";
+            while ( (line =  bufferedReader.readLine()) != null ){
+                contentAsString += line;
+            }
+            return contentAsString;
+
+            // Makes sure that the InputStream is closed after the app is
+            // finished using it.
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+        }
+    }
+
 }

@@ -34,10 +34,14 @@ public class SearchManager {
         public String build(){
             String url = BASE_URL + "q=" + query;
             if(type.equals(TYPE_PLAYLIST) || type.equals(TYPE_ARTIST) || type.equals(TYPE_ALBUM) || type.equals(TYPE_TRACK)){
-                url += "type=" + type;
+                url += "&type=" + type;
             }
             return  url;
         };
+        public SearchManager.RequestBuilder setType( String type ){
+            this.type = type;
+            return this;
+        }
     }
 
 }
