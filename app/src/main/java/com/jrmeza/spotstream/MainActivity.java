@@ -64,10 +64,7 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
                         //Toast.makeText(getApplicationContext(), playerState.trackUri, Toast.LENGTH_LONG).show();
                         if (!playerState.trackUri.equals("") ){
                             mPlayer.resume();
-                        }else{
-                            mPlayer.play("spotify:track:0zmfJIx6wH7zpFdIR8T8U9");
-                            track_duration_ms = 0;
-
+                            //mPlayer.seekToPosition(290000);
                         }
                         playerSatusTask.cancel( true );
                         playerSatusTask = new PalyerStatusTask();
@@ -256,7 +253,9 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
 
                 resultsTextView.setText(uri);
                 mPlayer.play(uri);
-                cancel( true );
+
+
+                cancel(true);
 
             } catch (JSONException e) {
                 Log.d("JSONException" ,e.getMessage());
@@ -265,6 +264,10 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
 
         }
 
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+        }
     }
     private String downloadUrl(String myurl) throws IOException {
         InputStream is = null;
@@ -333,26 +336,33 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
         @Override
         protected void onCancelled(String s) {
             super.onCancelled(s);
+            mProgressStatus = 0;
         }
 
         @Override
         protected void onCancelled() {
+
             super.onCancelled();
+            mProgressStatus = 0;
         }
 
         @Override
         protected String doInBackground(Integer... params) {
-            while( mProgressStatus  < 100 && !isCancelled()){
+
+            while( mProgressStatus  < 1000 && !isCancelled()){
 
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
                 updateStatusBar();
                 Log.d("STATUS_BAR_JRM" , mProgressStatus + "");
                 publishProgress(mProgressStatus);
             }
+            mProgressStatus = 0;
+            cancel( true );
             return null;
         }
     }
