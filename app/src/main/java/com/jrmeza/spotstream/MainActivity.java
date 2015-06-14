@@ -21,7 +21,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -50,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
     private PalyerStatusTask playerSatusTask;
     private ToggleButton mToglgeButton;
     private Player mPlayer;
+    Button A2B;
     private CompoundButton.OnCheckedChangeListener changeListener = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -110,9 +110,16 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
         mProgressBar.setMax(1000);
         playerSatusTask = new PalyerStatusTask();
-
+        A2B = (Button) findViewById( R.id.button2 );
         String url = (new SearchManager.RequestBuilder("Thinking Out Loud")).build();
         Toast.makeText(this, url,Toast.LENGTH_LONG).show();
+        final Intent intent = new Intent( this , SearchActivity.class );
+        A2B.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity( intent );
+            }
+        });
 
     }
 
@@ -136,6 +143,9 @@ public class MainActivity extends AppCompatActivity implements PlayerNotificatio
         }else if( id == R.id.logout_button){
             AuthenticationClient.logout(getApplication());
             openLogin();
+        }else if( id == R.id.search_action_button){
+            Intent intent = new Intent( getApplicationContext() , SearchActivity.class);
+            startActivity( intent );
         }
 
         return super.onOptionsItemSelected(item);

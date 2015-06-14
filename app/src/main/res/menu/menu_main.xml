@@ -5,4 +5,5 @@
         android:orderInCategory="100" app:showAsAction="never" />
     <item android:id="@+id/logout_button" android:title="Logout" android:orderInCategory="99"
         app:showAsAction="never"/>
+    <item android:id="@+id/search_action_button" android:icon="@android:drawable/ic_menu_search" android:title="Search" app:showAsAction="always"></item>
 </menu>
