@@ -1,9 +1,6 @@
-package com.jrmeza.spotstream;
+package com.jrmeza.spotstream.results;
 
 import android.text.TextUtils;
-import android.widget.Toast;
-
-import org.json.JSONObject;
 
 /**
  * Created by jrmeza on 6/7/15.
