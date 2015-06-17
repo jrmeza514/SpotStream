@@ -1,5 +1,6 @@
 package com.jrmeza.spotstream.results;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -11,8 +12,15 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.ImageRequest;
+import com.android.volley.toolbox.Volley;
 import com.jrmeza.spotstream.MainActivity;
 import com.jrmeza.spotstream.R;
+import com.jrmeza.spotstream.network.VolleySingleton;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -27,16 +35,15 @@ import java.util.List;
 public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapter.SearchViewHolder> {
     LayoutInflater inflater;
     List<SearchResult> searchResults = Collections.emptyList();
-    List<SearchViewHolder> searchViewHolders = new ArrayList<>();
-    List<Bitmap> bitmaps = new ArrayList<>();
     Context context;
+    RequestQueue mRequestQueue;
+    ImageLoader mImageLoader;
     public SearchResultAdapter(Context context, List<SearchResult> results){
         inflater = LayoutInflater.from( context );
         searchResults = results;
         this.context = context;
-        for (int x = 0; x < searchResults.size(); x++){
-            new ImageLoader().execute( searchResults.get( x ));
-        }
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+        mImageLoader = VolleySingleton.getInstance().getImageLoader();
 
     }
     @Override
@@ -50,10 +57,21 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
     @Override
     public void onBindViewHolder(final SearchViewHolder searchViewHolder, int i) {
         final SearchResult result = searchResults.get(i);
+        if(result.imageUrl != null){
+            mImageLoader.get(result.imageUrl , new ImageLoader.ImageListener() {
+                @Override
+                public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+                    searchViewHolder.imageView.setImageBitmap( response.getBitmap() );
+                }
+
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    searchViewHolder.imageView.setImageBitmap( BitmapFactory.decodeResource(Resources.getSystem() , R.mipmap.ic_launcher ));
+                }
+            });
+        }
         searchViewHolder.title.setText( result.title  );
-        searchViewHolder.imageView.setImageBitmap( result.image );
         searchViewHolder.uri = result.URI;
-        searchViewHolders.add( i , searchViewHolder );
     }
 
 
@@ -79,37 +97,4 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
             MainActivity.mPlayer.play( uri );
         }
     }
-
-    class ImageLoader extends AsyncTask<SearchResult, Void, Bitmap>{
-        SearchResult result;
-        @Override
-        protected Bitmap doInBackground(SearchResult... sr) {
-            result = sr[0];
-            URL url = null;
-            try {
-                url = new URL( result.imageUrl );
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-            Bitmap bitmap = null;
-            try {
-                 bitmap = BitmapFactory.decodeStream( url.openConnection().getInputStream());
-                return bitmap;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            super.onPostExecute(bitmap);
-            result.image = bitmap;
-            bitmaps.add( bitmap );
-            for (int x = 0; x  <searchViewHolders.size(); x++){
-                if( x < bitmaps.size() )searchViewHolders.get(x).imageView.setImageBitmap( searchResults.get(x).image);
-            }
-        }
-    }
-
 }

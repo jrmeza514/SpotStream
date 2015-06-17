@@ -18,9 +18,8 @@ import java.util.List;
  * Created by jrmeza on 6/16/15.
  */
 public class SpotifyParser {
-    public static List<SearchResult> parseTrackResults( String result ) throws JSONException {
-        JSONObject jsonResults = new JSONObject( result );
-        JSONObject jsonTracks = jsonResults.getJSONObject("tracks");
+    public static List<SearchResult> parseTrackResults( JSONObject result ) throws JSONException {
+        JSONObject jsonTracks = result.getJSONObject("tracks");
         JSONArray jsonItems = jsonTracks.getJSONArray("items");
         List<SearchResult> results = new ArrayList<SearchResult>();
 

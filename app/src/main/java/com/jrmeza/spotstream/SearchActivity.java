@@ -13,9 +13,14 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.jrmeza.spotstream.handler.ConnectionHandler;
 import com.jrmeza.spotstream.handler.PlayerHandler;
-import com.jrmeza.spotstream.http.DownloadWebpageTask;
+import com.jrmeza.spotstream.network.VolleySingleton;
 import com.jrmeza.spotstream.parse.SpotifyParser;
 import com.jrmeza.spotstream.results.SearchCallback;
 import com.jrmeza.spotstream.results.SearchManager;
@@ -24,13 +29,11 @@ import com.jrmeza.spotstream.results.SearchResultAdapter;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import com.spotify.sdk.android.player.Config;
-import com.spotify.sdk.android.player.ConnectionStateCallback;
 import com.spotify.sdk.android.player.Player;
-import com.spotify.sdk.android.player.PlayerNotificationCallback;
-import com.spotify.sdk.android.player.PlayerState;
 import com.spotify.sdk.android.player.Spotify;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -119,15 +122,31 @@ public class SearchActivity extends Activity{
                 SearchManager.RequestBuilder builder = new SearchManager.RequestBuilder(searchInputText);
                 builder.setType("track");
                 final String requestUrl = builder.build();
-                SearchCallback searchCallback  = new SearchCallback() {
+                final SearchCallback searchCallback  = new SearchCallback() {
                     @Override
-                    public void call(String result) throws JSONException {
-                        results = SpotifyParser.parseTrackResults(result);
+                    public void call(JSONObject result) throws JSONException {
+                        results = SpotifyParser.parseTrackResults( result );
                         SearchResultAdapter searchResultAdapter = new SearchResultAdapter(mContext , results);
                         mRecyclerView.setAdapter(searchResultAdapter);
                     }
                 };
-                new DownloadWebpageTask( searchCallback ).execute(requestUrl);
+                RequestQueue requestQueue = VolleySingleton.getInstance().getRequestQueue();
+                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, requestUrl, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            searchCallback.call( response );
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                });
+                requestQueue.add( jsonObjectRequest );
             }
         }
     }

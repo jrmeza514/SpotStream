@@ -1,6 +1,7 @@
 package com.jrmeza.spotstream.results;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.concurrent.Callable;
 
@@ -11,5 +12,5 @@ import javax.security.auth.callback.Callback;
  */
 public interface SearchCallback{
 
-   public void call( String result) throws JSONException;
+   public void call( JSONObject result) throws JSONException;
 }
